@@ -17,7 +17,7 @@ HOME_COLOR='white'
 HOME_BGCOLOR='#123764'
 
 WIDTH=600
-HEIGHT=int(WIDTH/10)
+HEIGHT=WIDTH // 10
 
 class TeamScore(object):
   def __init__(self, team_name, name_x, name_y=0):
@@ -91,10 +91,12 @@ def main(stdscr):
         width=WIDTH,
         height=HEIGHT,
 
+        border_width=HEIGHT // 12,
+
         timer_height=HEIGHT + 20,
-        name_font=int(HEIGHT / 3),
+        name_font=HEIGHT // 3,
         goals_height=HEIGHT - 20,
-        goals_font=int(HEIGHT / 2.5),
+        goals_font=HEIGHT // 2.5,
   )
   with open(os.path.join(SCORES_DIR, 'common.css'), 'w') as f:
     f.write(contents)
@@ -118,15 +120,37 @@ def main(stdscr):
 
   while True:
     home = TeamScore(home_name, 2)
-    stdscr.addstr(home.GetTeamNameStart()[1], home.GetTeamNameStart()[0], home_name)
-    rectangle(stdscr, home.GetScoreStart()[1], home.GetScoreStart()[0], home.GetScoreEnd()[1], home.GetScoreEnd()[0])
-    stdscr.addstr(home.GetScoreMid()[1], home.GetScoreMid()[0], str(home_goals))
+    stdscr.addstr(
+      home.GetTeamNameStart()[1],
+      home.GetTeamNameStart()[0],
+      home_name)
+    rectangle(
+      stdscr,
+      home.GetScoreStart()[1],
+      home.GetScoreStart()[0],
+      home.GetScoreEnd()[1],
+      home.GetScoreEnd()[0])
+    stdscr.addstr(
+      home.GetScoreMid()[1],
+      home.GetScoreMid()[0],
+      str(home_goals))
 
     # Away team names should be at least 10 chars away from home team name
     away = TeamScore(away_name, home.GetTeamNameEnd()[0] + 10)
-    stdscr.addstr(away.GetTeamNameStart()[1], away.GetTeamNameStart()[0], away_name)
-    rectangle(stdscr, away.GetScoreStart()[1], away.GetScoreStart()[0], away.GetScoreEnd()[1], away.GetScoreEnd()[0])
-    stdscr.addstr(away.GetScoreMid()[1], away.GetScoreMid()[0], str(away_goals))
+    stdscr.addstr(
+      away.GetTeamNameStart()[1],
+      away.GetTeamNameStart()[0],
+      away_name)
+    rectangle(
+      stdscr,
+      away.GetScoreStart()[1],
+      away.GetScoreStart()[0],
+      away.GetScoreEnd()[1],
+      away.GetScoreEnd()[0])
+    stdscr.addstr(
+      away.GetScoreMid()[1],
+      away.GetScoreMid()[0],
+      str(away_goals))
 
     if team == 0:
       stdscr.move(home.GetScoreMid()[1], home.GetScoreMid()[0])

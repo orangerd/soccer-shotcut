@@ -15,7 +15,8 @@
   --height: ${height}px;
   --height: calc(var(--width) / 10);
 
-  border: 5px solid white;
+  border: ${border_width} solid white;
+  border: calc(var(--height) / 12) solid white;
   border-radius: 50px;
   display: flex;
   font-family: Verdana;
