@@ -9,12 +9,15 @@ from curses.textpad import rectangle
 
 from mako.template import Template
 
-SCORES_DIR = '/tmp/soccer'
+SCORES_DIR='/tmp/soccer'
 
-HOME_LOGO = 'home.png'
-HOME_NAME = 'HOME'
-HOME_COLOR = 'white'
-HOME_BGCOLOR = '#123764'
+HOME_LOGO='https://spot70-images.s3.amazonaws.com/clubs/logos/000/000/022/thumb/mvla-logo.png'
+HOME_NAME='MVLA'
+HOME_COLOR='white'
+HOME_BGCOLOR='#123764'
+
+WIDTH=600
+HEIGHT=int(WIDTH/10)
 
 class TeamScore(object):
   def __init__(self, team_name, name_x, name_y=0):
@@ -70,10 +73,34 @@ def main(stdscr):
   stdscr.addstr(3, 0, 'Enter away team background color (RGB, #HEX, "white"): ')
   away_bgcolor = stdscr.getstr().decode('utf-8')
 
-  tmpl = Template(filename='scoreboard.html.mako', strict_undefined=True)
+  # Remove the directory if it already exists
   if os.path.isdir(SCORES_DIR):
     shutil.rmtree(SCORES_DIR)
   os.mkdir(SCORES_DIR)
+
+  # Write out the CSS
+  tmpl = Template(filename='common.css.mako', strict_undefined=True)
+  contents = tmpl.render(
+        home_color=home_color,
+        home_bgcolor=home_bgcolor,
+        away_color=away_color,
+        away_bgcolor=away_bgcolor,
+
+        # Calculate CSS manually since shotcut's renderer doesn't
+        # handle them
+        width=WIDTH,
+        height=HEIGHT,
+
+        timer_height=HEIGHT + 20,
+        name_font=int(HEIGHT / 3),
+        goals_height=HEIGHT - 20,
+        goals_font=int(HEIGHT / 2.5),
+  )
+  with open(os.path.join(SCORES_DIR, 'common.css'), 'w') as f:
+    f.write(contents)
+
+  # Create template for the html
+  tmpl = Template(filename='scoreboard.html.mako', strict_undefined=True)
 
   home_goals=0
   away_goals=0
@@ -86,6 +113,8 @@ def main(stdscr):
   logs = 6
 
   written_files = set()
+
+  keys = []
 
   while True:
     home = TeamScore(home_name, 2)
@@ -105,6 +134,7 @@ def main(stdscr):
       stdscr.move(away.GetScoreMid()[1], away.GetScoreMid()[0])
 
     key = stdscr.getkey()
+    keys.append(key)
     if key == 'KEY_RIGHT':
       team = 1
     elif key == 'KEY_LEFT':
@@ -131,19 +161,16 @@ def main(stdscr):
 
       contents = tmpl.render(
         home_logo=home_logo,
-        home_color=home_color,
-        home_bgcolor=home_bgcolor,
         home_name=home_name,
         home_goals=home_goals,
         away_logo=away_logo,
-        away_color=away_color,
-        away_bgcolor=away_bgcolor,
         away_name=away_name,
         away_goals=away_goals,
       )
       with open(os.path.join(SCORES_DIR, filename), 'w') as f:
         f.write(contents)
+    elif key == 'q':
+      break
 
 if __name__ == '__main__':
   wrapper(main)
-
