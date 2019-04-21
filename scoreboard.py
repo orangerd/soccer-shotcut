@@ -16,7 +16,7 @@ HOME_NAME='MVLA'
 HOME_COLOR='white'
 HOME_BGCOLOR='#123764'
 
-WIDTH=600
+WIDTH=300
 HEIGHT=WIDTH // 10
 
 class TeamScore(object):
