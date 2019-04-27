@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+from absl import app
+from absl import flags
+
 import curses
 import os
 import shutil
@@ -9,15 +12,60 @@ from curses.textpad import rectangle
 
 from mako.template import Template
 
-SCORES_DIR='/tmp/soccer'
+from typing import Optional
 
-HOME_LOGO='https://spot70-images.s3.amazonaws.com/clubs/logos/000/000/022/thumb/mvla-logo.png'
-HOME_NAME='MVLA'
-HOME_COLOR='white'
-HOME_BGCOLOR='#123764'
+FLAGS = flags.FLAGS
 
-WIDTH=300
-HEIGHT=WIDTH // 10
+flags.DEFINE_string(
+    'scores_dir',
+    '/tmp/scores',
+    'Directory to output scores. Note that it will be wiped out.')
+
+flags.DEFINE_string(
+    'home_name',
+    'MVLA',
+    'Name for the home team.')
+
+flags.DEFINE_string(
+    'home_logo',
+    'https://spot70-images.s3.amazonaws.com/clubs/logos/000/000/022/thumb/mvla-logo.png',
+    'Logo for the home team.')
+
+flags.DEFINE_string(
+    'home_color',
+    '#ffffff',
+    'Color for the home team.')
+
+flags.DEFINE_string(
+    'home_bgcolor',
+    '#123764',
+    'Background color for the home team.')
+
+flags.DEFINE_string(
+    'away_name',
+    None,
+    'Name for the away team.')
+
+flags.DEFINE_string(
+    'away_logo',
+    None,
+    'Logo for the away team.')
+
+flags.DEFINE_string(
+    'away_color',
+    None,
+    'Color for the away team.')
+
+flags.DEFINE_string(
+    'away_bgcolor',
+    None,
+    'Background color for the away team.')
+
+flags.DEFINE_integer(
+    'width',
+    300,
+    'Width of the scoreboard to show.')
+
 
 class TeamScore(object):
   def __init__(self, team_name, name_x, name_y=0):
@@ -49,56 +97,73 @@ class TeamScore(object):
   def GetScoreMid(self):
     return (self.score_x + 1, self.name_y + 2)
 
-def main(stdscr):
+
+def Prompt(stdscr, row: int, prompt: str) -> str:
+  curses.echo()
+  stdscr.addstr(row, 0, prompt)
+  return stdscr.getstr().decode('utf-8')
+
+
+def CursesWrapped(stdscr):
   stdscr.clear()
 
-  home_name = HOME_NAME
-  home_logo = HOME_LOGO
-  home_color = HOME_COLOR
-  home_bgcolor = HOME_BGCOLOR
+  i = 0
 
-  curses.echo()
-  stdscr.addstr(0, 0, 'Enter away team name: ')
-  away_name = stdscr.getstr().decode('utf-8')
+  width = FLAGS.width
+  height = FLAGS.width // 10
 
-  curses.echo()
-  stdscr.addstr(1, 0, 'Enter away team logo URL: ')
-  away_logo = stdscr.getstr().decode('utf-8')
+  if FLAGS.away_name is None:
+    away_name = Prompt(stdscr, i, 'Enter away team name: ')
+    i += 1
+  else:
+    away_name = FLAGS.away_name
 
-  curses.echo()
-  stdscr.addstr(2, 0, 'Enter away team color (RGB, #HEX, "white"): ')
-  away_color = stdscr.getstr().decode('utf-8')
+  if FLAGS.away_logo is None:
+    away_logo = Prompt(stdscr, i, 'Enter away team logo URL: ')
+    i += 1
+  else:
+    away_logo = FLAGS.away_logo
 
-  curses.echo()
-  stdscr.addstr(3, 0, 'Enter away team background color (RGB, #HEX, "white"): ')
-  away_bgcolor = stdscr.getstr().decode('utf-8')
+  if FLAGS.away_color is None:
+    away_color = Prompt(stdscr, 'Enter away team color (RGB, #HEX, "white"): ')
+    i += 1
+  else:
+    away_color = FLAGS.away_color
+
+  if FLAGS.away_bgcolor is None:
+    away_bgcolor = Prompt(
+        stdscr,
+        'Enter away team background color (RGB, #HEX, "white"): ')
+    i += 1
+  else:
+    away_bgcolor = FLAGS.away_bgcolor
 
   # Remove the directory if it already exists
-  if os.path.isdir(SCORES_DIR):
-    shutil.rmtree(SCORES_DIR)
-  os.mkdir(SCORES_DIR)
+  if os.path.isdir(FLAGS.scores_dir):
+    shutil.rmtree(FLAGS.scores_dir)
+  os.mkdir(FLAGS.scores_dir)
 
   # Write out the CSS
   tmpl = Template(filename='common.css.mako', strict_undefined=True)
   contents = tmpl.render(
-        home_color=home_color,
-        home_bgcolor=home_bgcolor,
+        home_color=FLAGS.home_color,
+        home_bgcolor=FLAGS.home_bgcolor,
         away_color=away_color,
         away_bgcolor=away_bgcolor,
 
         # Calculate CSS manually since shotcut's renderer doesn't
         # handle them
-        width=WIDTH,
-        height=HEIGHT,
+        width=width,
+        height=height,
 
-        border_width=HEIGHT // 12,
+        border_width=height // 12,
 
-        timer_height=HEIGHT + 20,
-        name_font=HEIGHT // 3,
-        goals_height=HEIGHT - 20,
-        goals_font=HEIGHT // 2.5,
+        timer_height=height + 20,
+        name_font=height // 3,
+        goals_height=height - 20,
+        goals_font=height // 2.5,
   )
-  with open(os.path.join(SCORES_DIR, 'common.css'), 'w') as f:
+  with open(os.path.join(FLAGS.scores_dir, 'common.css'), 'w') as f:
     f.write(contents)
 
   # Create template for the html
@@ -111,7 +176,7 @@ def main(stdscr):
   stdscr.clear()
   curses.noecho()
 
-  rectangle(stdscr, 5, 100, 25, 125)
+  rectangle(stdscr, 5, 80, 25, 105)
   logs = 6
 
   written_files = set()
@@ -119,11 +184,11 @@ def main(stdscr):
   keys = []
 
   while True:
-    home = TeamScore(home_name, 2)
+    home = TeamScore(FLAGS.home_name, 2)
     stdscr.addstr(
       home.GetTeamNameStart()[1],
       home.GetTeamNameStart()[0],
-      home_name)
+      FLAGS.home_name)
     rectangle(
       stdscr,
       home.GetScoreStart()[1],
@@ -180,21 +245,49 @@ def main(stdscr):
       if filename in written_files:
         continue
       written_files.update([filename])
-      stdscr.addstr(logs, 101, 'Wrote {}'.format(filename))
+      stdscr.addstr(logs, 82, 'Wrote {}'.format(filename))
       logs += 1
 
       contents = tmpl.render(
-        home_logo=home_logo,
-        home_name=home_name,
+        home_logo=FLAGS.home_logo,
+        home_name=FLAGS.home_name,
         home_goals=home_goals,
         away_logo=away_logo,
         away_name=away_name,
         away_goals=away_goals,
       )
-      with open(os.path.join(SCORES_DIR, filename), 'w') as f:
+      with open(os.path.join(FLAGS.scores_dir, filename), 'w') as f:
         f.write(contents)
     elif key == 'q':
       break
 
+
+class FileWriter(object):
+  def __init__(self, tmpl):
+    self.tmpl = tmpl
+    self.written_files = set()
+
+  def WriteFile(self, home_goals: int, away_goals: int) -> Optional[str]:
+    filename = '{}-{}.html'.format(home_goals, away_goals)
+    if filename in self.written_files:
+      return None
+    self.written_files.update([filename])
+    contents = self.tmpl.render(
+      home_logo=FLAGS.home_logo,
+      home_name=FLAGS.home_name,
+      home_goals=home_goals,
+      away_logo=away_logo,
+      away_name=away_name,
+      away_goals=away_goals,
+    )
+    with open(os.path.join(FLAGS.scores_dir, filename), 'w') as f:
+      f.write(contents)
+    return filename
+
+
+def main(argv):
+  wrapper(CursesWrapped)
+
+
 if __name__ == '__main__':
-  wrapper(main)
+  app.run(main)

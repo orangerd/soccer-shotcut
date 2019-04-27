@@ -13,10 +13,10 @@
 .base {
   --width: ${width}px;
   --height: ${height}px;
-  --height: calc(var(--width) / 10);
+  /* --height: calc(var(--width) / 10); */
 
   border: ${border_width}px solid white;
-  border: calc(var(--height) / 12) solid white;
+  /* border: calc(var(--height) / 12) solid white; */
   border-radius: 50px;
   display: flex;
   font-family: Verdana;
@@ -44,14 +44,14 @@
 .timer {
   background-color: black;
   flex: 0 0 ${timer_height}px;
-  flex: 0 0 calc(var(--height) + 20px);
+  /* flex: 0 0 calc(var(--height) + 20px); */
 }
 
 .name {
   align-self: center;
   flex: 1;
   font-size: ${name_font}px;
-  font-size: calc(var(--height) / 3);
+  /* font-size: calc(var(--height) / 3); */
 }
 
 .logo {
@@ -66,9 +66,9 @@
   border: 1px solid black;
   color: #000;
   flex: 0 0 ${goals_height}px;
-  flex: 0 0 calc(var(--height) - 20px);
+  /* flex: 0 0 calc(var(--height) - 20px); */
   font-size: ${goals_font}px;
-  font-size: calc(var(--height) / 2.5);
+  /* font-size: calc(var(--height) / 2.5); */
   margin: 0 5px;
   padding: 5px 0;
 }
