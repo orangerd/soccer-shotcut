@@ -125,7 +125,10 @@ def CursesWrapped(stdscr):
     away_logo = FLAGS.away_logo
 
   if FLAGS.away_color is None:
-    away_color = Prompt(stdscr, 'Enter away team color (RGB, #HEX, "white"): ')
+    away_color = Prompt(
+        stdscr,
+        i,
+        'Enter away team color (RGB, #HEX, "white"): ')
     i += 1
   else:
     away_color = FLAGS.away_color
@@ -133,6 +136,7 @@ def CursesWrapped(stdscr):
   if FLAGS.away_bgcolor is None:
     away_bgcolor = Prompt(
         stdscr,
+        i,
         'Enter away team background color (RGB, #HEX, "white"): ')
     i += 1
   else:
