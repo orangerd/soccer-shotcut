@@ -6,7 +6,7 @@
 <script src="qrc:/scripts/rangy-core.js"></script>
 <script src="qrc:/scripts/rangy-cssclassapplier.js"></script>
 <script src="qrc:/scripts/htmleditor.js"></script>
-<link rel="stylesheet" type="text/css" href="common.css">
+<link rel="stylesheet" type="text/css" href="common_${timer}.css">
 </head>
 <body>
   <div class="container">

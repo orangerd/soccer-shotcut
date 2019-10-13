@@ -84,7 +84,7 @@ class TeamScore(object):
 
   def GetTeamNameStart(self):
     return (self.name_x, self.name_y)
-  
+
   def GetTeamNameEnd(self):
     return (self.name_x + len(self.team_name) - 1, self.name_y)
 
@@ -149,26 +149,28 @@ def CursesWrapped(stdscr):
 
   # Write out the CSS
   tmpl = Template(filename='common.css.mako', strict_undefined=True)
-  contents = tmpl.render(
-        home_color=FLAGS.home_color,
-        home_bgcolor=FLAGS.home_bgcolor,
-        away_color=away_color,
-        away_bgcolor=away_bgcolor,
+  for timer in [50, 100]:
+    contents = tmpl.render(
+          home_color=FLAGS.home_color,
+          home_bgcolor=FLAGS.home_bgcolor,
+          away_color=away_color,
+          away_bgcolor=away_bgcolor,
 
-        # Calculate CSS manually since shotcut's renderer doesn't
-        # handle them
-        width=width,
-        height=height,
+          # Calculate CSS manually since shotcut's renderer doesn't
+          # handle them
+          width=width,
+          height=height,
+          timer=timer,
 
-        border_width=height // 12,
+          border_width=height // 12,
 
-        timer_height=height + 20,
-        name_font=height // 3,
-        goals_height=height - 20,
-        goals_font=height // 2.5,
-  )
-  with open(os.path.join(FLAGS.scores_dir, 'common.css'), 'w') as f:
-    f.write(contents)
+          timer_height=height + 20,
+          name_font=height // 3,
+          goals_height=height - 20,
+          goals_font=height // 2.5,
+    )
+    with open(os.path.join(FLAGS.scores_dir, 'common_{}.css'.format(timer)), 'w') as f:
+      f.write(contents)
 
   # Create template for the html
   tmpl = Template(filename='scoreboard.html.mako', strict_undefined=True)
@@ -186,6 +188,8 @@ def CursesWrapped(stdscr):
   written_files = set()
 
   keys = []
+
+  timer = 50
 
   while True:
     home = TeamScore(FLAGS.home_name, 2)
@@ -221,6 +225,10 @@ def CursesWrapped(stdscr):
       away.GetScoreMid()[0],
       str(away_goals))
 
+    stdscr.addstr(
+      5, 3,
+      'Timer: {} '.format(timer))
+
     if team == 0:
       stdscr.move(home.GetScoreMid()[1], home.GetScoreMid()[0])
     else:
@@ -244,8 +252,13 @@ def CursesWrapped(stdscr):
       else:
         if away_goals > 0:
           away_goals -= 1
+    elif key == 'h':
+      if timer == 50:
+        timer = 100
+      else:
+        timer = 50
     elif key == '\n':
-      filename = '{}-{}.html'.format(home_goals, away_goals)
+      filename = '{}-{}_{}.html'.format(home_goals, away_goals, timer)
       if filename in written_files:
         continue
       written_files.update([filename])
@@ -253,6 +266,7 @@ def CursesWrapped(stdscr):
       logs += 1
 
       contents = tmpl.render(
+        timer=timer,
         home_logo=FLAGS.home_logo,
         home_name=FLAGS.home_name,
         home_goals=home_goals,

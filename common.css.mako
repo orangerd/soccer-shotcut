@@ -45,6 +45,18 @@
   background-color: black;
   flex: 0 0 ${timer_height}px;
   /* flex: 0 0 calc(var(--height) + 20px); */
+  position: relative;
+}
+
+.timer::after {
+  --timer: ${timer}%;
+  content: '';
+  bottom: 0;
+  background-color: #ff0000;
+  height: 4px;
+  left: 0;
+  position: absolute;
+  width: var(--timer);
 }
 
 .name {
